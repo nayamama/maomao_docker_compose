@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  web:
+    restart: always
+    build: ./web
+    expose:
+      - "8000"
+    links:
+      - postgres:postgres
+    volumes:
+      - web-data:/flask_app/app/static
+    env_file: 
+      - .env
+    command: /usr/local/bin/gunicorn -w 2 --bind 0.0.0.0:8000 wsgi
+
+  nginx:
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+     # - .:/www/static
+      - web-data:/flask_app/app/static
+    links:
+      - web:web
+
+  data:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    command: "true"
+
+  postgres:
+    restart: always
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  db-data:
+  web-data:
