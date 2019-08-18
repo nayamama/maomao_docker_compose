@@ -2,8 +2,8 @@
 
 Featuring:
 
-- Docker v18.09.2
-- Docker Compose v1.23.2
+- Docker v17.09.2
+- Docker Compose v1.23.1
 - Docker Machine v0.16.1
 
 **Check out the awesome blog post here > https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/**
