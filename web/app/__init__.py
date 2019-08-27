@@ -43,5 +43,11 @@ def create_app(config_name):
     from .home import home as home_blueprint
     app.register_blueprint(home_blueprint)
 
+    # configurate upload folder
+    #UPLOAD_FOLDER = '/home/qi/projects/maomao_files'
+    #app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+    # configurate the maximum allowed payload of upload file
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
     return app

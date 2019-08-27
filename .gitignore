@@ -8,3 +8,6 @@ blog_old.md
 *.pyc
 migrations/
 unit_file/
+.Trash-1000
+Untitled.ipynb
+.ipynb_checkpoints

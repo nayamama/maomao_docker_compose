@@ -1,0 +1,4 @@
+.vscode/
+*.pyc
+migrations
+unit_file

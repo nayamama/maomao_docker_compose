@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% import "bootstrap/utils.html" as utils %}
+{% block title %}Upload File{% endblock %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block body %}
+<div class="content-section">
+ <div class="outer">
+    <div class="middle">
+      <div class="inner">
+				<br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <div class="center">
+            
+                <h1>Upload</h1>
+            
+            <br/>
+            {{ wtf.quick_form(form) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

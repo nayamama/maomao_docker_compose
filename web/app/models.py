@@ -1,6 +1,9 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+#from flask_appbuilder import Model
+#from flask_appbuilder.models.mixins import ImageColumn
+
 from app import db, login_manager
 
 
@@ -84,4 +87,60 @@ class Role(db.Model):
 
     def __repr__(self):
         return '<Role: {}>'.format(self.name)
+
+class Anchor(db.Model):
+    """
+    Create an Anchor table
+    """
+
+    __tablename__ = 'anchors'
+
+    id = db.Column(db.Integer, primary_key=True)
+    #email = db.Column(db.String(60), index=True, unique=True)
+    name = db.Column(db.String(60), index=True, nullable=False)
+    entry_time = db.Column(db.DateTime, nullable=True)
+    address = db.Column(db.String(120))
+    momo_number = db.Column(db.String(60), index=True, nullable=True, unique=True)
+    mobile_number = db.Column(db.String(60), nullable=True)
+    id_number = db.Column(db.String(60), nullable=True)
+    basic_salary_or_not = db.Column(db.Boolean)
+    basic_salary = db.Column(db.Float, nullable=True)
+    live_time = db.Column(db.Float, nullable=True)
+    live_session = db.Column(db.String(60), nullable=True)
+    percentage = db.Column(db.Float, default=0.0, nullable=True)
+    #total_paid = db.Column(db.Float, default=0.0)
+    #owned_salary = db.Column(db.Float, default=0.0)
+    ace_anchor_or_not = db.Column(db.Boolean)
+    agent = db.Column(db.String(60), nullable=True)
+    #payroll_id = db.Column(db.Integer, db.ForeignKey('payrolls.id'))
+    payrolls = db.relationship('Payroll', backref='host', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Anchor: {}>'.format(self.name)
+
+class Payroll(db.Model):
+    """
+    Create a payroll table
+    """
+    __tablename__ = "payrolls"
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=True)
+    #name = db.Column(db.String(60), index=True, nullable=False)
+    #momo_number = db.Column(db.String(60), nullable=True)
+    coins = db.Column(db.Float, default=0.0, nullable=True)
+    guild_division = db.Column(db.Float, default=0.0, nullable=True)
+    anchor_reward = db.Column(db.Float, default=0.0, nullable=True)
+    profit = db.Column(db.Float, default=0.0, nullable=True)
+    penalty = db.Column(db.Float, default=0.0, nullable=True)
+    #basic_salary = db.Column(db.Float, nullable=True)
+    #percentage = db.Column(db.Float, default=0.0, nullable=True)
+    #ace_anchor_or_not = db.Column(db.Boolean)
+    salary = db.Column(db.Float, nullable=True)
+    comment = db.Column(db.Text, nullable=True)
+    #employees = db.relationship('Anchor', backref='payroll', lazy='dynamic')
+    anchor_momo = db.Column(db.String(60), db.ForeignKey('anchors.momo_number'))
+
+    def __repr__(self):
+        return '<Payroll: {}: {}>'.format(self.anchor_id, self.date)
 
