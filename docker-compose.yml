@@ -3,12 +3,13 @@ version: '3'
 services:
   postgres:
     restart: always
-    build: ./postgres
-    #image: postgres:latest
+    #build: ./postgres
+    image: postgres:latest
     container_name: postgres_host
     hostname: db_host
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
 
@@ -24,7 +25,7 @@ services:
       - web-data:/flask_app/app/static
     env_file: 
       - .env
-    command: /usr/local/bin/gunicorn -w 2 --bind 0.0.0.0:8000 wsgi
+    #command: /usr/local/bin/gunicorn -w 2 --bind 0.0.0.0:8000 wsgi
 
   nginx:
     restart: always

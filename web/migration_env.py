@@ -35,7 +35,7 @@ target_metadata = current_app.extensions['migrate'].db.metadata
 
 # pass an include_object function to env to effect what db objects Alembic will generate command for
 def include_object(object, name, type_, reflected, compare_to):
-    if type_ == 'table' and name.startswith(u"公会播主月收入"):
+    if type_ == 'table' and name.startswith(u"raw_data"):
         return False
 
     return True

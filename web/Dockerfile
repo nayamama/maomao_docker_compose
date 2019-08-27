@@ -10,11 +10,8 @@ ENV FLASK_CONFIG=development
 WORKDIR /flask_app
 
 COPY requirements.txt requirements.txt
-RUN python -m pip install -r requirements.txt \
-#    && flask db init \
-#    && cp -f migration_env.py migrations/env.py \
-#    && flask db migrate \
-#    && flask db upgrade
+RUN python -m pip install -r requirements.txt 
 
 COPY  . .
-
+RUN chmod +x docker-entrypoint.sh
+CMD ["/bin/bash", "docker-entrypoint.sh"]
