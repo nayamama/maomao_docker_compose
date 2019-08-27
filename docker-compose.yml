@@ -15,6 +15,7 @@ services:
   web:
     restart: always
     build: ./web
+    container_name: web_content
     expose:
       - "8000"
     links:
@@ -28,6 +29,7 @@ services:
   nginx:
     restart: always
     build: ./nginx
+    container_name: web_server
     ports:
       - "80:80"
     volumes:
