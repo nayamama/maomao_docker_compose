@@ -1,6 +1,17 @@
 version: '3'
 
 services:
+  postgres:
+    restart: always
+    build: ./postgres
+    #image: postgres:latest
+    container_name: postgres_host
+    hostname: db_host
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   web:
     restart: always
     build: ./web
@@ -30,16 +41,6 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     command: "true"
-
-  postgres:
-    restart: always
-    image: postgres:latest
-    container_name: postgres_host
-    hostname: db_host
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
 volumes:
   db-data:
