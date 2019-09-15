@@ -12,8 +12,15 @@
         <br/>
         <div class="center">
             
-                <h1>Upload</h1>
-            
+                <h1>上传工资数据</h1>
+	   <div style="padding:20px;border:1px solid darkorange;border-radius:8px;">
+            <h3>上传文件要求：</h3>
+	    <ul>
+		<li>上传文件的格式为.xlsx，不要更改为.csv。</li>
+		<li>上传文件“月份”列的格式为“2019-08”，且每月只上传一次。</li>
+		<li>上传文件中需包含如下列名：月份， 播主奖励(元)， 总陌币， 公会分成金额(元)， 陌陌号， 实际收入(元)。</li>
+	   </ul>
+	   </div>
             <br/>
             {{ wtf.quick_form(form) }}
         </div>

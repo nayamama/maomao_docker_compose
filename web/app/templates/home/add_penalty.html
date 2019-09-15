@@ -1,13 +1,17 @@
 {% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/utils.html" as utils %}
 {% extends "base.html" %}
-{% block title %} Result {% endblock %}
+{% block title %} ?? {% endblock %}
 {% block body %}
 <div class="content-section">
  <div class="outer">
     <div class="middle">
       <div class="inner">
+				<br/>
+        {{ utils.flashed_messages() }}
+        <br/>
         <div class="center">
-						<h1>{{ form.momo_number.data }}</h1>
+						{% from "_formhelpers.html" import render_field %}
             <br/>
             {{ wtf.quick_form(form) }}
         </div>

@@ -2,3 +2,5 @@
 *.pyc
 migrations
 unit_file
+tests/
+py3-flask

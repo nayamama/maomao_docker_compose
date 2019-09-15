@@ -7,14 +7,16 @@
  <div class="outer">
     <div class="middle">
       <div class="inner">
-				<br/>
+	      <br/>
         {{ utils.flashed_messages() }}
         <br/>
-        <div class="center">
-						{% from "_formhelpers.html" import render_field %}
-            <br/>
-            {{ wtf.quick_form(form) }}
-        </div>
+        {% include "admin/search/search_sub/search_anchor.html" ignore missing %}
+        <hr class="col-xs-12">
+        {% include "admin/search/search_sub/search_payroll_by_month.html" ignore missing %}
+        <hr class="col-xs-12">
+        {% include "admin/search/search_sub/search_payroll_by_anchor_month.html" ignore missing %}
+        <hr class="col-xs-12">
+        {% include "admin/search/search_sub/search_payroll_by_anchor.html" ignore missing %}
       </div>
     </div>
   </div>

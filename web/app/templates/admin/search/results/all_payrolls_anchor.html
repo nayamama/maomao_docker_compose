@@ -1,0 +1,52 @@
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Payrolls{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">{{ name }}的工资历史纪录</h1>
+        {% if pays %}
+          <div class="center">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="20%"> 月份 </th>
+                  <th width="20%"> 总陌币 </th>
+                  <th width="20%"> 播主奖励 </th>
+                  <th width="20%"> 罚款 </th>
+                  <th width="20%"> 工资 </th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for payroll in pays %}
+                <tr>
+                  <td> {{ payroll.date }} </td>
+                  <td> {{ payroll.coins}} </td>
+									<td> {{ payroll.anchor_reward }} </td>
+									<td> {{ payroll.penalty }} </td>
+									<td> {{ payroll.salary }} </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+            <br/>
+            {{ the_div|safe }}
+            <script src="http://cdn.pydata.org/bokeh/release/bokeh-1.3.4.min.js"></script>
+            <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-1.3.4.min.js"></script>
+            {{ the_script|safe }}
+          </div>
+        {% else %}
+          <div style="text-align: center">
+            <h3> {{ name}}无工资历坲纪录</h3>
+        {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

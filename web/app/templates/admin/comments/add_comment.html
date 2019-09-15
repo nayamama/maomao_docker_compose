@@ -1,0 +1,23 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %} Add Comment {% endblock %}
+{% block body %}
+<div class="content-section">
+ <div class="outer">
+    <div class="middle">
+      <div class="inner">
+	      <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+				<div class="center">
+  				<h2>添加新备注</h2>  
+  					{% from "_formhelpers.html" import render_field %}
+  					<br/>
+  					{{ wtf.quick_form(form) }}
+				</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -6,16 +6,18 @@ from werkzeug.utils import secure_filename
 import datetime
 import string
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc, desc
 import psycopg2
 import re
+from bokeh.embed import components
 
 from . import admin
-from forms import DepartmentForm, RoleForm, EmployeeAssignForm, AnchorForm, SearchForm, UploadForm, SearchPayrollForm, PayrollForm
+from .forms import DepartmentForm, RoleForm, EmployeeAssignForm, AnchorForm, \
+    SearchForm, UploadForm, SearchPayrollForm, SearchPayrollByAnchorForm, \
+    SearchPayrollByMonthForm, PayrollForm, CommentForm
 from .. import db
-from ..models import Department, Role, Employee, Anchor, Payroll
-from helper import get_system_info
-
+from ..models import Department, Role, Employee, Anchor, Payroll, Comment
+from .helper import get_system_info, create_line_chart, add_log
 
 def check_admin():
     """
@@ -26,8 +28,6 @@ def check_admin():
 
 
 # Department Views
-
-
 @admin.route('/departments', methods=['GET', 'POST'])
 @login_required
 def list_departments():
@@ -61,9 +61,15 @@ def add_department():
             db.session.add(department)
             db.session.commit()
             flash('You have successfully added a new department.')
+
+            add_log(current_user.username, "Add", target_id=department.id, 
+                    target_table="departments")
         except:
             # in case department name already exists
             flash('Error: department name already exists.')
+            db.session.rollback()
+            add_log(current_user.username, "Add", target_table="departments", 
+                    status="F")
 
         # redirect to departments page
         return redirect(url_for('admin.list_departments'))
@@ -92,6 +98,9 @@ def edit_department(id):
         db.session.commit()
         flash('You have successfully edited the department.')
 
+        add_log(current_user.username, "Update", target_id=id, 
+                target_table="departments")
+
         # redirect to the departments page
         return redirect(url_for('admin.list_departments'))
 
@@ -111,10 +120,12 @@ def delete_department(id):
     check_admin()
 
     department = Department.query.get_or_404(id)
+    d_name = department.name
     db.session.delete(department)
     db.session.commit()
     flash('You have successfully deleted the department.')
 
+    add_log(current_user.username, "Delete", target_id=d_name, target_table="departments")
     # redirect to the departments page
     return redirect(url_for('admin.list_departments'))
 
@@ -153,9 +164,15 @@ def add_role():
             db.session.add(role)
             db.session.commit()
             flash('You have successfully added a new role.')
+
+            add_log(current_user.username, "Add", target_id=role.id, 
+                    target_table="roles")
         except:
             # in case role name already exists
             flash('Error: role name already exists.')
+            db.session.rollback()
+            add_log(current_user.username, "Add",
+                    target_table="departments", status="F")
 
         # redirect to the roles page
         return redirect(url_for('admin.list_roles'))
@@ -184,6 +201,9 @@ def edit_role(id):
         db.session.commit()
         flash('You have successfully edited the role.')
 
+        add_log(current_user.username, "Update", target_id=id, 
+                    target_table="roles")
+
         # redirect to the roles page
         return redirect(url_for('admin.list_roles'))
 
@@ -202,14 +222,19 @@ def delete_role(id):
     check_admin()
 
     role = Role.query.get_or_404(id)
+    r_name = role.name
     db.session.delete(role)
     db.session.commit()
     flash('You have successfully deleted the role.')
+
+    add_log(current_user.username, "Delete", target_id=r_name, 
+                    target_table="roles")
 
     # redirect to the roles page
     return redirect(url_for('admin.list_roles'))
 
     return render_template(title="Delete Role")
+
 
 @admin.route('/employees')
 @login_required
@@ -246,12 +271,16 @@ def assign_employee(id):
         db.session.commit()
         flash('You have successfully assigned a department and role.')
 
+        add_log(current_user.username, "Update", target_id=id, 
+                    target_table="employees")
+
         # redirect to the roles page
         return redirect(url_for('admin.list_employees'))
 
     return render_template('admin/employees/employee.html',
                            employee=employee, form=form,
                            title='Assign Employee')
+
 
 @admin.route('/anchors')
 @login_required
@@ -263,89 +292,7 @@ def list_anchors():
     anchors = Anchor.query.all()
     return render_template('admin/anchors/anchors.html',
                            anchors=anchors, title='Anchors')
-"""
-@admin.route('/anchors/add_salary_anchor', methods=['GET', 'POST'])
-@login_required
-def add_salary_anchor():
-    
-    check_admin()
 
-    add_anchor = "anchor_with_salary"
-
-    form = AnchorForm()
-
-    # remove no-relative fields
-    del form.basic_salary_or_not
-    del form.percentage
-    del form.photo
-
-    if form.validate_on_submit():
-        anchor = Anchor(name=form.name.data,
-                        entry_time=form.entry_time.data,
-                        #basic_salary_or_not=form.basic_salary_or_not.data
-                        basic_salary_or_not=True,
-                        basic_salary=form.basic_salary.data)
-                        #percentage=form.percentage.data
-                        #total_paid=form.total_paid.data,
-                        #owned_salary=form.owned_salary.data
-
-        try:
-            db.session.add(anchor)
-            db.session.commit()
-
-            # create folder to store personal image files
-            directory = '/home/qi/projects/maomao_files/' + form.name.data
-            if not os.path.exists(directory):
-                os.mkdir(directory)
-            flash('You have successfully added a new anchor.')
-        except:
-            flash('Error: anchor name already exists.')
-
-        return redirect(url_for('admin.list_anchors'))
-
-    # load anchor template
-    return render_template('admin/anchors/anchor.html', action="Add",
-                           add_anchor=add_anchor, form=form,
-                           title="Add Anchor with Salary")
-
-@admin.route('/anchors/add_commission_anchor', methods=['GET', 'POST'])
-@login_required
-def add_commission_anchor():
-    
-    check_admin()
-
-    add_anchor = "anchor_with_commission"
-
-    form = AnchorForm()
-    del form.basic_salary
-    del form.basic_salary_or_not
-    del form.photo
-
-    if form.validate_on_submit():
-        anchor = Anchor(
-            name=form.name.data,
-            entry_time=form.entry_time.data,
-            basic_salary_or_not=False,
-            percentage=form.percentage.data
-        )
-        try:
-            db.session.add(anchor)
-            db.session.commit()
-
-            directory = '/home/qi/projects/maomao_files/' + form.name.data
-            if not os.path.exists(directory):
-                os.mkdir(directory)
-
-            flash('You have successfully added a new anchor.')
-        except:
-            flash('Error: anchor name already exists.')
-
-        return redirect(url_for('admin.list_anchors'))
-
-    return render_template('admin/anchors/anchor.html', action="Add",
-                           add_anchor=add_anchor, form=form,
-                           title="Add Anchor with Commission")
-"""
 
 @admin.route('/anchors/add_anchor', methods=['GET', 'POST'])
 @login_required
@@ -360,7 +307,6 @@ def add_anchor():
     form = AnchorForm()
     del form.photo
     del form.entry_time
-    #del form.live_session
 
     if form.validate_on_submit():
         anchor = Anchor(
@@ -382,20 +328,32 @@ def add_anchor():
             db.session.add(anchor)
             db.session.commit()
 
-            directory = '/home/qi/projects/maomao_files/' + form.momo_number.data
+            upload_folder = os.getenv('UPLOAD_FOLDER')
+            directory = upload_folder + "/" + form.momo_number.data
+
             if not os.path.exists(directory):
                 os.mkdir(directory)
 
-            flash('You have successfully added a new anchor.')
-        except Exception as e:
-            #flash('Error: anchor name already exists.')
-            flash(e)
+            flash('你已成功加入一个主播记录。')
+
+            add_log(current_user.username, 
+                    "Add", target_id = anchor.id, target_table="anchors")
+
+        except:
+            flash('错误:主播陌陌号已在数据库中。')
+            db.session.rollback()
+
+            add_log(current_user.username, 
+                    "Add", target_table="anchors", status="F")
+            #error = str(e.__dict__['orig'])
+            #flash(error)
 
         return redirect(url_for('admin.list_anchors'))
 
     return render_template('admin/anchors/anchor.html', action="Add",
                            add_anchor=add_anchor, form=form,
                            title="Add Anchor")
+
 
 @admin.route('/anchors/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -424,16 +382,19 @@ def edit_anchor(id):
         anchor.ace_anchor_or_not=form.ace_anchor_or_not.data
         anchor.agent = form.agent.data
 
-        # save image file
+        # save binary file
         if form.photo.data:
             f = form.photo.data
             filename = secure_filename(f.filename)
-            UPLOAD_FOLDER = '/home/qi/projects/maomao_files'
-            f.save(os.path.join(UPLOAD_FOLDER, form.name.data, filename))
+            upload_folder = os.getenv('UPLOAD_FOLDER')
+            f.save(os.path.join(upload_folder, form.name.data, filename))
 
         db.session.add(anchor)
         db.session.commit()
-        flash('You have successfully edited the anchor.')
+        flash('你已成功修改一个主播记录。')
+
+        add_log(current_user.username, 
+                "Update", target_id=id, target_table="anchors")
 
         # redirect to the anchors page
         return redirect(url_for('admin.list_anchors'))
@@ -451,7 +412,7 @@ def edit_anchor(id):
     form.percentage.data = anchor.percentage
     form.ace_anchor_or_not.data = anchor.ace_anchor_or_not
     form.agent.data = anchor.agent
-    
+
     return render_template('admin/anchors/anchor.html', add_anchor=add_anchor,
                            form=form, title="Edit Anchor")
 
@@ -470,43 +431,14 @@ def delete_anchor(id, action, name):
         anchor = Anchor.query.get_or_404(id)
         db.session.delete(anchor)
         db.session.commit()
+
+        add_log(current_user.username, 
+                "Delete", target_id=id, target_table="anchors")
         flash('You have successfully deleted the anchor.')
 
     # redirect to the roles page
     return redirect(url_for('admin.list_anchors'))
 
-@admin.route('/search', methods=['GET', 'POST'])
-@login_required
-def search():
-    """
-    Search the anchor information
-    """
-    check_admin()
-    form = SearchForm(request.form)
-    if request.method == "POST" and form.validate_on_submit():
-        return redirect((url_for('admin.search_result', query=form.search.data)))
-    return render_template('admin/search/search.html', form=form)
-
-
-@admin.route('/results/<query>')
-@login_required
-def search_result(query):
-    result = Anchor.query.filter_by(momo_number=query).first()
-    if not result:
-        flash('No results found.')
-        return redirect(url_for('admin.search'))
-    else:
-        form = AnchorForm(obj=result)
-        name = form.name.data
-        del form.submit
-        del form.photo
-        return render_template('admin/search/result.html', query=query, form=form, name=name)
-
-@admin.route('/system')
-@login_required
-def system_info():
-    used_cpu_percent, used_disk_percent, free_disk_size = get_system_info()
-    return render_template('admin/system.html', cpu=used_cpu_percent, disk=used_disk_percent, free=free_disk_size)
 
 @admin.route('/upload', methods=['POST', 'GET'])
 @login_required
@@ -515,77 +447,178 @@ def upload():
     upload monthly report to local host
     """
     check_admin()
-    
+
     form = UploadForm()
+
+    # retrieve all existing dates in payrolls table
+    existing_dates = Payroll.query.with_entities(Payroll.date).distinct().all()
+    dates_list = [d[0] for d in existing_dates]
+
+    # retrieve all momo_numbers in anchors table
+    momo_numbers = Anchor.query.with_entities(Anchor.momo_number).all()
+    nm_list = [n[0] for n in momo_numbers]
+
     if form.validate_on_submit():
         f = form.upload_file.data
         filename = f.filename
         filename = filename.replace('-', '')
-        UPLOAD_FOLDER = '/home/qi/projects/maomao_files'
-        path_name = os.path.join(UPLOAD_FOLDER, filename)
+
+        upload_folder = os.getenv('UPLOAD_FOLDER')
+        path_name = os.path.join(upload_folder, filename)
         if not os.path.exists(path_name):
             f.save(path_name)
             df = pd.read_excel(path_name, encoding = "utf-8")
+
+            # date cleaning
             df = df.rename(columns=lambda x: re.sub(u'\(元\)', '', x))
-            engine = create_engine('postgresql://stage_test:1234abcd@192.168.1.76:5432/stage_db')
 
-            tablename = 'raw_data_' + datetime.datetime.today().strftime('%Y%m')
-            df.to_sql(tablename, engine)
+            # python 2 cannot deal with 'str' and 'unicode' comparision in pandas, but python 3 can handle it
+            df = df.drop(df[df["结算方式"] == "对私"].index)
 
-            connection = engine.connect()
-            trans = connection.begin()
-            try:
-                query = """insert into payrolls (date, anchor_reward, coins, guild_division, anchor_momo) 
-                            select  date_trunc('month', to_date(月份, 'YYYY-MM')), 播主奖励, 总陌币, 公会分成金额, 陌陌号 
-                            from {}""".format(tablename)
-                connection.execute(query)
-                trans.commit()
-                flash('You have successfully upload the file.')
-            except Exception as e:
-                trans.rollback()
-                raise
-            finally:
-                connection.close()
+            # check date
+            date_object = datetime.datetime.strptime(df.iloc[0]['月份'], "%Y-%m")
+
+            # check if all momo_number of raw data is available in anchor table
+            df_numbers = list(df['陌陌号'])
+            invalid_number = []
+            for num in df_numbers:
+                if str(num) not in nm_list:
+                    invalid_number.append(str(num))
+
+            if date_object in dates_list:
+                msg = str(date_object.year) + '年' + str(date_object.month) + "月的工资表已在数据库, 请检查日期重新上传."
+                os.remove(path_name)
+                flash(msg)
+            elif invalid_number:
+                nums = ",	".join(invalid_number)
+                os.remove(path_name)
+                msg = nums + " 不存在主播数据库中, 请检查陌陌号是否正确或添加新的主播。"
+                flash(msg)
+            else:
+                engine = db.engine
+
+                tablename = 'raw_data_' + datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
+                df.to_sql(tablename, engine)
+
+                connection = engine.connect()
+                trans = connection.begin()
+                try:
+                    query = """insert into payrolls (date, anchor_reward, coins, guild_division, anchor_momo, profit) 
+                                select  date_trunc('month', to_date(月份, 'YYYY-MM')), 播主奖励, 总陌币, 公会分成金额, 陌陌号, 实际收入 
+                                from {}""".format(tablename)
+                    connection.execute(query)
+                    trans.commit()
+
+                    # update salary and penalty for newly added records
+                    for payroll in Payroll.query.filter_by(date=date_object).all():
+                        penalties = payroll.host.penalties
+                        penalty_sum = 0
+                        for p in penalties:
+                            if p.date.year == date_object.year and p.date.month == date_object.month:
+                                penalty_sum += p.amount
+
+                        payroll.penalty = penalty_sum
+                        if payroll.host.ace_anchor_or_not:
+                            payroll.salary = round(payroll.coins * payroll.host.percentage * 0.1 - penalty_sum, 2)
+                        else:
+                            payroll.salary = round(payroll.coins * payroll.host.percentage * 0.1 * 0.94 - penalty_sum, 2)
+                    db.session.commit()
+
+                    add_log(current_user.username, "Upload", target_table=tablename)
+
+                    flash('该文件已成功上传。')
+
+                except exc.SQLAlchemyError as e:
+
+                    trans.rollback()
+                    db.session.rollback()
+                    add_log(current_user.username, "Upload", target_table=tablename, status="F")
+                    error = str(e.__dict__['orig'])
+                    flash(error)
+
+                    # trans rollback automatically even without calling call back?
+                    #query = "drop table {}".format(tablename)
+                    #new_tran = connection.begin()
+                    #db.session.execute(query)
+                    #new_tran.commit()
+
+                finally:
+                    os.remove(path_name)
+                    connection.close()
         else:
-            flash("The file already exists.")
-            #return render_template('admin/upload.html', form=form)
+            flash("该文件已存在。")
     return render_template('admin/upload.html', form=form)
 
-@admin.route('/search_payroll', methods=['GET', 'POST'])
+
+@admin.route('/search', methods=['GET', 'POST'])
 @login_required
-def search_payroll():
+def search():
     """
-    Search the payroll information of the anchor
+    To provide all search function
     """
     check_admin()
-    form = SearchPayrollForm(request.form)
-    """
-    for d in Payroll.query.with_entities(Payroll.date).distinct():
-        print d[0]
-        print type(d[0])
-    """
-    form.date.choices = [(int(d[0].strftime('%Y%m')), int(d[0].strftime('%Y%m'))) for d in Payroll.query.with_entities(Payroll.date).distinct()]
-    if request.method == "POST" and form.validate_on_submit():
-        #print type(form.date.data)
-        return redirect((url_for('admin.search_payroll_result', query=form.search.data, date=form.date.data)))
-    return render_template('admin/search/search.html', form=form)
+
+    # form to search the anchor information
+    anchor_form = SearchForm(request.form)
+    if anchor_form.submit1.data and anchor_form.validate_on_submit():
+        return redirect((url_for('admin.anchor_search_result', query=anchor_form.search.data)))
+
+    # form to search the anchor salary information on a specific month
+    anchor_payroll_form = SearchPayrollForm(request.form)
+    anchor_payroll_form.date.choices = [(int(d[0].strftime('%Y%m')), int(d[0].strftime('%Y%m'))) for d in Payroll.query.with_entities(Payroll.date).order_by(Payroll.date).distinct()]
+    if anchor_payroll_form.submit2.data and anchor_payroll_form.validate_on_submit():
+        return redirect((url_for('admin.search_payroll_result', 
+                        query=anchor_payroll_form.search.data, date=anchor_payroll_form.date.data)))
+
+    # form to search the monthly payroll table for all anchors
+    monthly_payroll_form = SearchPayrollByMonthForm(request.form)
+    monthly_payroll_form.date.choices = [(int(d[0].strftime('%Y%m')), int(d[0].strftime('%Y%m'))) for d in Payroll.query.with_entities(Payroll.date).order_by(Payroll.date).distinct()]
+    if monthly_payroll_form.submit3.data and monthly_payroll_form.validate_on_submit():
+        date = datetime.datetime.strptime(str(monthly_payroll_form.date.data), "%Y%m")
+        return redirect((url_for('admin.list_payrolls_by_month',
+                        date=date)))
+
+    # form to search all payrolls for a specific anchor
+    anchor_all_pay_form = SearchPayrollByAnchorForm(request.form)
+    if anchor_all_pay_form.submit4.data and anchor_all_pay_form.validate_on_submit():
+        return redirect((url_for('admin.search_by_anchor', query=anchor_all_pay_form.anchor.data)))
+
+    return render_template('admin/search/search.html', anchor_form=anchor_form, 
+                            anchor_payroll_form=anchor_payroll_form,
+                            monthly_payroll_form=monthly_payroll_form,
+                            anchor_all_pay_form=anchor_all_pay_form)
+
+
+@admin.route('/anchor_results/<query>')
+@login_required
+def anchor_search_result(query):
+    result = Anchor.query.filter_by(momo_number=query).first()
+    if not result:
+        flash('该陌陌号在主播表中没有记录')
+        return redirect(url_for('admin.search'))
+    else:
+        form = AnchorForm(obj=result)
+        name = form.name.data
+        del form.submit
+        del form.photo
+        return render_template('admin/search/results/result.html', query=query, form=form, name=name)
 
 
 @admin.route('/search_payroll/<query>/<date>', methods=['GET', 'POST'])
 @login_required
 def search_payroll_result(query, date):
+    """
+    calculate the salary of an anchor in a specific month
+    """
+    check_admin()
+
     date = datetime.datetime.strptime(date, '%Y%m')
     payroll = Payroll.query.filter_by(anchor_momo=query).filter_by(date=date).first()
     if not payroll:
-        flash('No results found.')
-        return redirect(url_for('admin.search_payroll'))
+        flash('没有相关检索结果, 请检查主播陌陌号和其工作月份是否相符。')
+        return redirect(url_for('admin.search'))
     else:
         form = PayrollForm(obj=payroll)
-        if form.validate_on_submit():
-            payroll.comment = form.comment.data
-            db.session.add(payroll)
-            db.session.commit()
-
         form.date.data = payroll.date
         form.name.data = payroll.host.name
         form.momo_number.data = payroll.anchor_momo
@@ -593,9 +626,124 @@ def search_payroll_result(query, date):
         form.guild_division.data = payroll.guild_division
         form.anchor_reward.data = payroll.anchor_reward
         form.profit.data = payroll.profit
-        form.penalty.data = payroll.penalty
         form.basic_salary.data = payroll.host.basic_salary
         form.percentage.data = payroll.host.percentage
         form.ace_anchor_or_not.data = payroll.host.ace_anchor_or_not
-        
-    return render_template('admin/search/result.html', query=query, form=form)
+
+        penalties = payroll.host.penalties
+        ps = []
+        for p in penalties:
+            if p.date.year == date.year and p.date.month == date.month:
+                ps.append((p.date, p.amount))
+                #penalty_sum += p.amount
+
+        comments = payroll.host.comments
+        cms = []
+        for c in comments:
+            if c.date.year == date.year and c.date.month == date.month:
+                cms.append((c.date, c.comment))
+
+        salary = payroll.salary
+    return render_template('admin/search/results/result.html', query=query, form=form, 
+                            salary=salary, penalty_list=ps, comments=cms)
+
+
+@admin.route('/payrolls/<date>')
+@login_required
+def list_payrolls_by_month(date):
+    check_admin()
+    """
+    List all payrolls on a specific month
+    """
+    payrolls = Payroll.query.filter_by(date=date).order_by(desc(Payroll.date)).all()
+    salary_total = round(sum([p.salary for p in payrolls]), 2)
+
+    date_obj = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S") 
+    year = date_obj.year
+    month = date_obj.month
+    return render_template('admin/search/results/payrolls.html',
+                           payrolls=payrolls, year=year, month=month, 
+                           salary_total=salary_total, title='Payrolls')
+
+
+@admin.route('/search_by_anchor/<query>')
+@login_required
+def search_by_anchor(query):
+    result = Payroll.query.filter_by(anchor_momo=query).order_by(desc(Payroll.date)).all()
+
+    if not result:
+        flash('该陌陌号在工资表中没有记录')
+        return redirect(url_for('admin.search'))
+
+    # plot a chart for the payroll history of an anchor
+    name = Anchor.query.filter_by(momo_number=query).first().name
+    engine = db.engine
+    query = "select date, salary from payrolls where anchor_momo = {}::varchar(30) order by date;".format(query)
+    df = pd.read_sql_query(query, engine)
+    engine.dispose()
+
+    #name = Anchor.query.filter_by(momo_number=query).first().name
+    title = name + "工资历史纪录"
+    plot = create_line_chart(df, title)
+    script, div = components(plot)
+    
+    return render_template('admin/search/results/all_payrolls_anchor.html', 
+                            pays=result, name=name, 
+                            the_div=div, the_script=script)
+
+
+@admin.route('/comments')
+@login_required
+def list_comments():
+    """
+    List all anchors
+    """
+    check_admin()
+
+    comments = Comment.query.order_by(Comment.date.desc()).all()
+    return render_template('admin/comments/comments.html',
+                           comments=comments, title='备注')
+
+
+@admin.route('/add_comment', methods=['GET', 'POST'])
+@login_required
+def add_comment():
+    """
+    Add a comment input
+    """
+    check_admin()
+
+    form = CommentForm()
+
+    if form.validate_on_submit():
+        comment = Comment(
+            anchor_momo=form.momo_number.data,
+            date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            comment=form.comment.data
+        )
+        try:
+            db.session.add(comment)
+            db.session.commit()
+
+            flash(u'此备注记录已成功录入')
+
+            add_log(current_user.username, 
+                    "Add", target_id = comment.id, target_table="comments")
+        except:
+            flash(u'错误:此陌陌号不存在, 请验证输入的陌陌号重试')
+
+            db.session.rollback()
+            add_log(current_user.username, 
+                    "Add", target_table="comments", status="F")
+
+        return redirect(url_for('admin.list_comments'))
+
+    return render_template('admin/comments/add_comment.html', form=form,
+                            title="Add Comment")
+
+
+@admin.route('/system')
+@login_required
+def system_info():
+    used_cpu_percent, used_disk_percent, free_disk_size = get_system_info()
+    return render_template('admin/system.html', cpu=used_cpu_percent, disk=used_disk_percent, free=free_disk_size)

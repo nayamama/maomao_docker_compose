@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+    <meta charset="UTF-8">
     <title>{{ title }} | Project Dream Team</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -21,7 +23,7 @@
               {% if current_user.is_admin %}
                 <a class="navbar-brand topnav" href="{{ url_for('admin.search') }}">
                     <i class="fa fa-search"></i>
-                    Search Anchor
+                    检索
                     </a>
                 <!--<div class="navbar-brand topnav">
                     <i class="glyphicon glyphicon-search"></i>
@@ -29,11 +31,15 @@
                 </div>-->
                 <a class="navbar-brand topnav" href="{{ url_for('admin.add_anchor') }}">
                     <i class="fa fa-plus"></i>
-                    Add Anchor 
+                    添加主播 
                 </a>
                 <a class="navbar-brand topnav" href="{{ url_for('admin.upload') }}">
                     <i class="fa fa-upload"></i>
-                    Upload  
+                    工资上传  
+                </a>
+                <a class="navbar-brand topnav" href="{{ url_for('admin.add_comment') }}">
+                    <i class="fa fa-table"></i>
+                    备注  
                 </a>
               {% endif %}
           </div>
@@ -41,22 +47,20 @@
               <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
                     {% if current_user.is_admin %}
-                        <li><a href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ url_for('admin.list_departments') }}">Departments</a></li>
-                        <li><a href="{{ url_for('admin.list_roles') }}">Roles</a></li>
-                        <li><a href="{{ url_for('admin.list_employees') }}">Employees</a></li>
-                        <li><a href="{{ url_for('admin.list_anchors') }}">Anchors</a></li>
-                        <li><a href="{{ url_for('admin.search_payroll') }}">Payrolls</a></li>
-                        <!--<li class="w3-xxxlarge"><a href="{{ url_for('admin.search') }}"><i class="fa fa-search"></i>Search</a></li>-->
+                        <li><a href="{{ url_for('home.admin_dashboard') }}">面板</a></li>
+                        <li><a href="{{ url_for('admin.list_departments') }}">部门</a></li>
+                        <li><a href="{{ url_for('admin.list_roles') }}">职务</a></li>
+                        <li><a href="{{ url_for('admin.list_employees') }}">员工</a></li>
+                        <li><a href="{{ url_for('admin.list_anchors') }}">主播</a></li>
                     {% else %}
-                        <li><a href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('home.dashboard') }}">面板</a></li>
                     {% endif %}
-                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}">退出</a></li>
                     <li><a><i class="fa fa-user"></i>  Hi, {{ current_user.username }}!</a></li>
                 {% else %}
-                    <li><a href="{{ url_for('home.homepage') }}">Home</a></li>
-                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('home.homepage') }}">主页</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">登记</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">登录</a></li>
                 {% endif %}
               </ul>
           </div>
