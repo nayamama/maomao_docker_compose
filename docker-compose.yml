@@ -3,10 +3,8 @@ version: '3'
 services:
   postgres:
     restart: always
-    #build: ./postgres
     image: postgres:latest
     container_name: postgres_host
-    hostname: db_host
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -35,7 +33,6 @@ services:
     ports:
       - "80:80"
     volumes:
-     # - .:/www/static
       - web-data:/flask_app/app/static
     links:
       - web:web

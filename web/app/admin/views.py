@@ -129,8 +129,6 @@ def delete_department(id):
     # redirect to the departments page
     return redirect(url_for('admin.list_departments'))
 
-    return render_template(title="Delete Department")
-
 
 @admin.route('/roles')
 @login_required
@@ -233,8 +231,6 @@ def delete_role(id):
     # redirect to the roles page
     return redirect(url_for('admin.list_roles'))
 
-    return render_template(title="Delete Role")
-
 
 @admin.route('/employees')
 @login_required
@@ -267,6 +263,7 @@ def assign_employee(id):
     if form.validate_on_submit():
         employee.department = form.department.data
         employee.role = form.role.data
+        employee.is_admin = form.is_admin.data
         db.session.add(employee)
         db.session.commit()
         flash('You have successfully assigned a department and role.')
@@ -345,8 +342,6 @@ def add_anchor():
 
             add_log(current_user.username, 
                     "Add", target_table="anchors", status="F")
-            #error = str(e.__dict__['orig'])
-            #flash(error)
 
         return redirect(url_for('admin.list_anchors'))
 
@@ -529,18 +524,11 @@ def upload():
                     flash('该文件已成功上传。')
 
                 except exc.SQLAlchemyError as e:
-
                     trans.rollback()
                     db.session.rollback()
                     add_log(current_user.username, "Upload", target_table=tablename, status="F")
                     error = str(e.__dict__['orig'])
                     flash(error)
-
-                    # trans rollback automatically even without calling call back?
-                    #query = "drop table {}".format(tablename)
-                    #new_tran = connection.begin()
-                    #db.session.execute(query)
-                    #new_tran.commit()
 
                 finally:
                     os.remove(path_name)
@@ -635,7 +623,6 @@ def search_payroll_result(query, date):
         for p in penalties:
             if p.date.year == date.year and p.date.month == date.month:
                 ps.append((p.date, p.amount))
-                #penalty_sum += p.amount
 
         comments = payroll.host.comments
         cms = []
@@ -682,7 +669,6 @@ def search_by_anchor(query):
     df = pd.read_sql_query(query, engine)
     engine.dispose()
 
-    #name = Anchor.query.filter_by(momo_number=query).first().name
     title = name + "工资历史纪录"
     plot = create_line_chart(df, title)
     script, div = components(plot)

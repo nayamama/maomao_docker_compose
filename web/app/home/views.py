@@ -113,7 +113,6 @@ def add_penalty():
 
             flash(u'此罚款记录已成功录入')
 
-            #msg = current_user.username + " add a penalty."
             add_log(current_user.username, 
                     "Add", target_id=penalty.id, 
                     target_table="penalties")

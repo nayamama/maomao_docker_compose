@@ -33,6 +33,7 @@ class EmployeeAssignForm(FlaskForm):
                                   get_label="name")
     role = QuerySelectField(query_factory=lambda: Role.query.all(),
                             get_label="name")
+    is_admin = BooleanField("是否管理员", default=False)
     submit = SubmitField('提交')
 
 class AnchorForm(FlaskForm):

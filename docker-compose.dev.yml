@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  web:
+    environment:
+      - FLASK_CONFIG=development
+      - FLASK_ENV=development

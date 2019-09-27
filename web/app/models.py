@@ -1,9 +1,6 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-#from flask_appbuilder import Model
-#from flask_appbuilder.models.mixins import ImageColumn
-
 from app import db, login_manager
 
 
@@ -19,8 +16,6 @@ class Employee(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(60), index=True, unique=True)
     username = db.Column(db.String(60), index=True, unique=True)
-    #first_name = db.Column(db.String(60), index=True)
-    #last_name = db.Column(db.String(60), index=True)
     password_hash = db.Column(db.String(128))
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
@@ -176,7 +171,9 @@ class Log(db.Model):
     action = db.Column(db.String(20), nullable=False)
     target_table = db.Column(db.String(120), nullable=True)
     target_id = db.Column(db.String(20), nullable=True)
-    #msg = db.Column(db.String(120), nullable=False)
     user = db.Column(db.String(20), nullable=False)
     status = db.Column(db.String(5), nullable=True)
+
+    def __repr__(self):
+        return 'Log: {} {} {} of {}'.format(self.user, self.action, self.target_id, self.target_table)
 

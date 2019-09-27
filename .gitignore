@@ -11,3 +11,4 @@ unit_file/
 .Trash-1000
 Untitled.ipynb
 .ipynb_checkpoints
+web/create_pypi_archive.sh

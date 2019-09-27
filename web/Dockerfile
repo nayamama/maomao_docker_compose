@@ -7,7 +7,7 @@ RUN apt-get install libpq-dev \
     && mkdir /flask_app \
     && mkdir /upload_folder
 
-ENV FLASK_CONFIG=development
+#ENV FLASK_CONFIG=development
 WORKDIR /flask_app
 
 COPY requirements.txt requirements.txt
