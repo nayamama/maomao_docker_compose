@@ -42,10 +42,18 @@
                   <td> {{ anchor.name }} </td>
                   <td> {{ anchor.momo_number }} </td>
                   <td> {{ anchor.mobile_number }} </td>
-									<td> {{ anchor.basic_salary_or_not }} </td>
+                  {% if anchor.basic_salary_or_not %}
+                    <td> <i class="fa fa-check"></i>
+                  {% else %}
+                    <td> <i class="fa fa-minus"></i>
+                  {% endif %}
 									<td> {{ anchor.basic_salary }} </td>
 									<td> {{ anchor.percentage }} </td>
-									<td> {{ anchor.ace_anchor_or_not }} </td>
+                  {% if anchor.ace_anchor_or_not %}
+                    <td> <i class="fa fa-check"></i>
+                  {% else %}
+                    <td> <i class="fa fa-minus"></i>
+                  {% endif %}
                   <td>
                     <a href="{{ url_for('admin.edit_anchor', id=anchor.id) }}">
                       <i class="fa fa-pencil"></i> Edit 
@@ -63,7 +71,7 @@
           </div>
         {% else %}
           <div style="text-align: center">
-            <h3> 数据库内没有主播记录。 </h3>
+            <h3> 数杮库内没有主播记录。 </h3>
             <hr class="intro-divider">
         {% endif %}
         </div>

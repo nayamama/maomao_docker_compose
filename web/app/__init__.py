@@ -6,15 +6,18 @@ from flask_login import LoginManager, login_required, login_user, logout_user
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 from datetime import timedelta
-
+from flask_mail import Mail
 
 # local imports
 from config import app_config
 
-# db variable initialization
+# create db instance
 db = SQLAlchemy()
 
-# create a LoginManager object 
+# create mail instance
+mail = Mail()
+
+# create a LoginManager instance
 login_manager = LoginManager()
 
 
@@ -24,11 +27,30 @@ def create_app(config_name):
     app.config.from_pyfile('config.py')
     # set session life time
     app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(hours=1)
+    # configurate the maximum allowed payload of upload file
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+    # add email smtp
+    """
+    #google smtp service configuration
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = "mengn9603@gmail.com"
+    app.config['MAIL_PASSWORD'] = 'secret_password'
+    """
+    app.config['MAIL_SERVER'] = 'smtpdm.aliyun.com'
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USE_SSL'] = True
+    app.config['MAIL_USERNAME'] = "noreply@mail.xuanpin.ltd"
+    app.config['MAIL_PASSWORD'] = 'PIvotal2019'
+    
+    # initialize Plugins
+    mail.init_app(app)
     db.init_app(app)
-
     Bootstrap(app)
-
     login_manager.init_app(app)
+
     login_manager.login_message = "You must be logged in to access this page."
     login_manager.login_view = "auth.login"
     login_manager.refresh_view = "auth.logout"
@@ -47,19 +69,18 @@ def create_app(config_name):
     migrate = Migrate(app, db)
 
     # register blueprints
-    from app import models
+    #from app import models
 
-    from .admin import admin as admin_blueprint
-    app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    with app.app_context():
+        from app import models
+        from .admin import admin as admin_blueprint
+        app.register_blueprint(admin_blueprint, url_prefix='/admin')
 
-    from .auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint)
+        from .auth import auth as auth_blueprint
+        app.register_blueprint(auth_blueprint)
 
-    from .home import home as home_blueprint
-    app.register_blueprint(home_blueprint)
-
-    # configurate the maximum allowed payload of upload file
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+        from .home import home as home_blueprint
+        app.register_blueprint(home_blueprint)
 
     # configure error handling
     @app.errorhandler(403)

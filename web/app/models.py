@@ -1,8 +1,10 @@
+from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 from app import db, login_manager
-
+import app
 
 class Employee(UserMixin, db.Model):
     """
@@ -40,6 +42,19 @@ class Employee(UserMixin, db.Model):
         Check if hashed password matches actual password
         """
         return check_password_hash(self.password_hash, password)
+
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
+        return s.dumps({'user_id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return Employee.query.get(user_id)
 
     def __repr__(self):
         return '<Employee: {}>'.format(self.username)
@@ -97,12 +112,12 @@ class Anchor(db.Model):
     momo_number = db.Column(db.String(60), index=True, nullable=True, unique=True)
     mobile_number = db.Column(db.String(60), nullable=True)
     id_number = db.Column(db.String(60), nullable=True)
-    basic_salary_or_not = db.Column(db.Boolean)
-    basic_salary = db.Column(db.Float, nullable=True)
+    basic_salary_or_not = db.Column(db.Boolean, default=False)
+    basic_salary = db.Column(db.Float, nullable=True, default=0)
     live_time = db.Column(db.Float, nullable=True)
     live_session = db.Column(db.String(60), nullable=True)
     percentage = db.Column(db.Float, default=0.0, nullable=True)
-    ace_anchor_or_not = db.Column(db.Boolean)
+    ace_anchor_or_not = db.Column(db.Boolean, default=False)
     agent = db.Column(db.String(60), nullable=True)
     payrolls = db.relationship('Payroll', backref='host', lazy='dynamic')
     penalties = db.relationship('Penalty', backref='host', lazy='dynamic')

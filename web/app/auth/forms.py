@@ -34,3 +34,21 @@ class LoginForm(FlaskForm):
     email = StringField('邮箱', validators=[DataRequired(), Email()])
     password = PasswordField('密码', validators=[DataRequired()])
     submit = SubmitField('登录')
+
+
+class RequestResetForm(FlaskForm):
+    email = StringField('邮箱', validators=[DataRequired(), Email()])
+    submit = SubmitField('请求密码重置')
+
+    def validate_email(self, email):
+        employee = Employee.query.filter_by(email=email.data).first()
+        if employee is None:
+            raise ValidationError('无账户使用此邮箱，请检查邮箱或登录后重试')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('密码', validators=[
+                                        DataRequired(),
+                                        EqualTo('confirm_password')
+                                        ])
+    confirm_password = PasswordField('确认密码')
+    submit = SubmitField('密码重置')
