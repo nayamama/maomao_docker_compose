@@ -43,12 +43,14 @@
                   <td> {{ anchor.momo_number }} </td>
                   <td> {{ anchor.mobile_number }} </td>
                   {% if anchor.basic_salary_or_not %}
-                    <td> <i class="fa fa-check"></i>
+                    <td> <i class="fa fa-check"></i></td>
+                    <td> {{ anchor.basic_salary }} </td>
                   {% else %}
-                    <td> <i class="fa fa-minus"></i>
+                    <td> <i class="fa fa-minus"></i></td>
+                    <td> <i class="fa fa-minus"></i></td>
                   {% endif %}
-									<td> {{ anchor.basic_salary }} </td>
-									<td> {{ anchor.percentage }} </td>
+		    <!--<td> {{ anchor.basic_salary }} </td>-->
+		  <td> {{ anchor.percentage }} </td>
                   {% if anchor.ace_anchor_or_not %}
                     <td> <i class="fa fa-check"></i>
                   {% else %}
@@ -71,7 +73,7 @@
           </div>
         {% else %}
           <div style="text-align: center">
-            <h3> 数杮库内没有主播记录。 </h3>
+            <h3> 数据库内没有主播记录。 </h3>
             <hr class="intro-divider">
         {% endif %}
         </div>

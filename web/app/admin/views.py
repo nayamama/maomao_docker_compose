@@ -418,7 +418,7 @@ def edit_anchor(id):
             f = form.photo.data
             filename = secure_filename(f.filename)
             upload_folder = os.getenv('UPLOAD_FOLDER')
-            f.save(os.path.join(upload_folder, form.name.data, filename))
+            f.save(os.path.join(upload_folder, form.momo_number.data, filename))
 
         db.session.add(anchor)
         db.session.commit()

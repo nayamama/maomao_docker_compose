@@ -7,7 +7,7 @@ services:
     container_name: postgres_host
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+     # - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
 
@@ -17,8 +17,10 @@ services:
     container_name: web_content
     expose:
       - "8000"
-    links:
-      - postgres:postgres
+    #links:
+    #  - postgres:postgres
+    depends_on:
+      - postgres
     volumes:
       - web-data:/flask_app/app/static
       - upload-files:/upload_folder
@@ -34,14 +36,18 @@ services:
       - "80:80"
     volumes:
       - web-data:/flask_app/app/static
-    links:
-      - web:web
+    #links:
+    #  - web:web
+    depends_on:
+      - web
 
   data:
     image: postgres:latest
     volumes:
       - db-data:/var/lib/postgresql/data
-    command: "true"
+    #depends_on:
+    #  - postgres
+    #command: "true"
 
 volumes:
   db-data:
