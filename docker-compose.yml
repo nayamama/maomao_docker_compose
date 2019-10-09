@@ -17,8 +17,6 @@ services:
     container_name: web_content
     expose:
       - "8000"
-    #links:
-    #  - postgres:postgres
     depends_on:
       - postgres
     volumes:
@@ -36,18 +34,16 @@ services:
       - "80:80"
     volumes:
       - web-data:/flask_app/app/static
-    #links:
-    #  - web:web
     depends_on:
       - web
 
-  data:
-    image: postgres:latest
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    #depends_on:
-    #  - postgres
-    #command: "true"
+  #data:
+  #  image: postgres:latest
+  #  volumes:
+  #    - db-data:/var/lib/postgresql/data
+  #  depends_on:
+  #    - postgres
+  #  command: "true"
 
 volumes:
   db-data:
