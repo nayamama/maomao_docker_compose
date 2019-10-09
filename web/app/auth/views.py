@@ -3,12 +3,12 @@ from flask_login import login_required, login_user, logout_user, current_user
 from flask_mail import Message
 
 from . import auth
-from .forms import LoginForm, RegistrationForm, RequestResetForm, ResetPasswordForm
+from .forms import LoginForm, RequestResetForm, ResetPasswordForm
 from .. import db, mail
 from ..models import Employee
 from ..admin.helper import add_log
 
-
+'''
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -34,7 +34,7 @@ def register():
 
     # load registration template
     return render_template('auth/register.html', form=form, title='Register')
-
+'''
 
 @auth.route('/logout')
 @login_required

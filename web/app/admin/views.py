@@ -14,7 +14,7 @@ from bokeh.embed import components
 from . import admin
 from .forms import DepartmentForm, RoleForm, EmployeeAssignForm, AnchorForm, \
     SearchForm, UploadForm, SearchPayrollForm, SearchPayrollByAnchorForm, \
-    SearchPayrollByMonthForm, PayrollForm, CommentForm
+    SearchPayrollByMonthForm, PayrollForm, CommentForm, RegistrationForm
 from .. import db
 from ..models import Department, Role, Employee, Anchor, Payroll, Comment
 from .helper import get_system_info, create_line_chart, add_log
@@ -26,6 +26,42 @@ def check_admin():
     if not current_user.is_admin:
         abort(403)
 
+@admin.route('/register', methods=['GET', 'POST'])
+@login_required
+def register():
+    """
+    Handle requests to the /register route
+    Add an employee to the database through the registration form
+    """
+    check_admin()
+
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        employee = Employee(email=form.email.data,
+                            username=form.username.data,
+                            password=form.password.data)
+
+        # add employee to the database
+        try:
+            db.session.add(employee)
+            db.session.commit()
+            flash('该员工成功登记', 'success')
+
+            add_log(employee.username, "Add", 
+                    target_id=employee.id, target_table="employees")
+        except exc.SQLAlchemyError as e:
+            #flash('该邮箱已被使用， 请更换邮箱或用原邮箱索回密码。', 'error')
+            error = str(e.__dict__['orig'])
+            flash(error)
+            db.session.rollback()
+            add_log(current_user.username, "Add", target_table="employees", 
+                    status="F")
+
+        # redirect to the login page
+        return redirect(url_for('admin.list_employees'))
+
+    # load registration template
+    return render_template('admin/register.html', form=form, title='Register')
 
 # Department Views
 @admin.route('/departments', methods=['GET', 'POST'])
@@ -549,14 +585,14 @@ def search():
     # form to search the anchor information
     anchor_form = SearchForm(request.form)
     if anchor_form.submit1.data and anchor_form.validate_on_submit():
-        return redirect((url_for('admin.anchor_search_result', query=anchor_form.search.data)))
+        return redirect((url_for('admin.anchor_search_result', query=anchor_form.search.data.strip())))
 
     # form to search the anchor salary information on a specific month
     anchor_payroll_form = SearchPayrollForm(request.form)
     anchor_payroll_form.date.choices = [(int(d[0].strftime('%Y%m')), int(d[0].strftime('%Y%m'))) for d in Payroll.query.with_entities(Payroll.date).order_by(Payroll.date).distinct()]
     if anchor_payroll_form.submit2.data and anchor_payroll_form.validate_on_submit():
         return redirect((url_for('admin.search_payroll_result', 
-                        query=anchor_payroll_form.search.data, date=anchor_payroll_form.date.data)))
+                        query=anchor_payroll_form.search.data.strip(), date=anchor_payroll_form.date.data)))
 
     # form to search the monthly payroll table for all anchors
     monthly_payroll_form = SearchPayrollByMonthForm(request.form)
@@ -569,7 +605,7 @@ def search():
     # form to search all payrolls for a specific anchor
     anchor_all_pay_form = SearchPayrollByAnchorForm(request.form)
     if anchor_all_pay_form.submit4.data and anchor_all_pay_form.validate_on_submit():
-        return redirect((url_for('admin.search_by_anchor', query=anchor_all_pay_form.anchor.data)))
+        return redirect((url_for('admin.search_by_anchor', query=anchor_all_pay_form.anchor.data.strip())))
 
     return render_template('admin/search/search.html', anchor_form=anchor_form, 
                             anchor_payroll_form=anchor_payroll_form,

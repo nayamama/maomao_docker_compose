@@ -1,12 +1,12 @@
 # -*- coding: UTF-8 -*-
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms import StringField, SubmitField, DateField, BooleanField, DecimalField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, Length
+from wtforms import StringField, SubmitField, DateField, BooleanField, DecimalField, SelectField, TextAreaField, PasswordField, ValidationError
+from wtforms.validators import DataRequired, Length, Email, EqualTo
 from wtforms import validators
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
-from ..models import Department, Role
+from ..models import Department, Role, Employee
 
 
 class DepartmentForm(FlaskForm):
@@ -17,6 +17,27 @@ class DepartmentForm(FlaskForm):
     description = StringField('部门描述', validators=[DataRequired()])
     submit = SubmitField('提交')
 
+class RegistrationForm(FlaskForm):
+    """
+    Form for users to create new account
+    """
+    email = StringField('邮箱', validators=[DataRequired(), Email()])
+    username = StringField('用户名', validators=[DataRequired()])
+    password = PasswordField('密码', validators=[
+                                        DataRequired(),
+                                        EqualTo('confirm_password')
+                                        ])
+    confirm_password = PasswordField('确认密码')
+    submit = SubmitField('登记')
+
+    def validate_email(self, field):
+        if Employee.query.filter_by(email=field.data).first():
+            raise ValidationError('此邮箱已被登记。')
+
+    def validate_username(self, field):
+        if Employee.query.filter_by(username=field.data).first():
+            raise ValidationError('此用户名已被登记。')
+        
 class RoleForm(FlaskForm):
     """
     Form for admin to add or edit a role
