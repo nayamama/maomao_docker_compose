@@ -47,7 +47,7 @@ def register():
             db.session.commit()
             flash('该员工成功登记', 'success')
 
-            add_log(employee.username, "Add", 
+            add_log(current_user.username, "Add", 
                     target_id=employee.id, target_table="employees")
         except exc.SQLAlchemyError as e:
             #flash('该邮箱已被使用， 请更换邮箱或用原邮箱索回密码。', 'error')
