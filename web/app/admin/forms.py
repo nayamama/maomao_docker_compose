@@ -62,11 +62,11 @@ class AnchorForm(FlaskForm):
     Form for detailed employee information
     """
     name = StringField('姓名', validators=[DataRequired()])
-    entry_time = DateField('入职日期', format='%Y-%m-%d')
-    address = StringField('住址', validators=[DataRequired()])
+    entry_time = DateField('入职日期', format='%Y-%m-%d', validators=[validators.Optional()])
+    address = StringField('住址', validators=[validators.Optional()])
     momo_number = StringField('陌陌号', validators=[DataRequired()])
-    mobile_number = StringField('手机号', validators=[DataRequired()])
-    id_number = StringField('身份证号', validators=[DataRequired(), Length(min=18, max=18, message='The length should be 18 digits.')])
+    mobile_number = StringField('手机号', validators=[validators.Optional()])
+    id_number = StringField('身份证号', validators=[validators.Optional(), Length(min=18, max=18, message='The length should be 18 digits.')])
     basic_salary_or_not = BooleanField('是否有保底工资', validators=[validators.Optional()])
     basic_salary = DecimalField('保底工资', validators=[validators.Optional()])
     live_time = DecimalField('直播时长', validators=[validators.Optional()])
