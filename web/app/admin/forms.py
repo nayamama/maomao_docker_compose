@@ -2,7 +2,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from wtforms import StringField, SubmitField, DateField, BooleanField, DecimalField, SelectField, TextAreaField, PasswordField, ValidationError
-from wtforms.validators import DataRequired, Length, Email, EqualTo
+from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange
 from wtforms import validators
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
@@ -74,7 +74,7 @@ class AnchorForm(FlaskForm):
         '直播时段',
         choices=[('', '---'),('morning', '上午'), ('afternoon', '下午'), ('evening', '夜间'), ('night', '凌晨')]
     )
-    percentage = DecimalField('提成', validators=[validators.Optional()])
+    percentage = DecimalField('提成', validators=[validators.Optional(), NumberRange(min=0, max=1, message="提成数字应在0-1之间。")])
     ace_anchor_or_not = BooleanField('是否王牌主播', validators=[validators.Optional()])
     agent = StringField('所属经纪人', validators=[validators.optional()])
     photo = FileField()

@@ -52,7 +52,7 @@ def register():
         except exc.SQLAlchemyError as e:
             #flash('该邮箱已被使用， 请更换邮箱或用原邮箱索回密码。', 'error')
             error = str(e.__dict__['orig'])
-            flash(error)
+            flash(error, 'error')
             db.session.rollback()
             add_log(current_user.username, "Add", target_table="employees", 
                     status="F")
@@ -102,7 +102,7 @@ def add_department():
                     target_table="departments")
         except:
             # in case department name already exists
-            flash('Error: department name already exists.')
+            flash('Error: department name already exists.', 'error')
             db.session.rollback()
             add_log(current_user.username, "Add", target_table="departments", 
                     status="F")
@@ -203,7 +203,7 @@ def add_role():
                     target_table="roles")
         except:
             # in case role name already exists
-            flash('Error: role name already exists.')
+            flash('Error: role name already exists.', 'error')
             db.session.rollback()
             add_log(current_user.username, "Add",
                     target_table="departments", status="F")
@@ -346,7 +346,7 @@ def add_anchor():
             name=form.name.data,
             entry_time=datetime.datetime.today().strftime("%Y-%m-%d"),
             address=form.address.data,
-            momo_number=form.momo_number.data,
+            momo_number=form.momo_number.data.strip(),
             mobile_number=form.mobile_number.data,
             id_number=form.id_number.data,
             basic_salary_or_not=form.basic_salary_or_not.data,
@@ -373,11 +373,11 @@ def add_anchor():
                     "Add", target_id = anchor.id, target_table="anchors")
 
         except:
-            flash('错误:主播陌陌号已在数据库中。')
+            flash('错误:主播陌陌号已在数据库中。', 'error')
             db.session.rollback()
 
             add_log(current_user.username, 
-                    "Add", target_table="anchors", status="F")
+                    "Add", target_id = form.momo_number.data, target_table="anchors", status="F")
 
         return redirect(url_for('admin.list_anchors'))
 
@@ -519,12 +519,12 @@ def upload():
             if date_object in dates_list:
                 msg = str(date_object.year) + '年' + str(date_object.month) + "月的工资表已在数据库, 请检查日期重新上传."
                 os.remove(path_name)
-                flash(msg)
+                flash(msg, 'error')
             elif invalid_number:
                 nums = ",	".join(invalid_number)
                 os.remove(path_name)
                 msg = nums + " 不存在主播数据库中, 请检查陌陌号是否正确或添加新的主播。"
-                flash(msg)
+                flash(msg, 'error')
             else:
                 engine = db.engine
 
@@ -564,14 +564,14 @@ def upload():
                     db.session.rollback()
                     add_log(current_user.username, "Upload", target_table=tablename, status="F")
                     error = str(e.__dict__['orig'])
-                    flash(error)
+                    flash(error, 'error')
 
                 finally:
                     os.remove(path_name)
                     connection.close()
         else:
-            flash("该文件已存在。")
-    return render_template('admin/upload.html', form=form)
+            flash("该文件已存在。", 'error')
+    return render_template('admin/upload.html', form=form,  title="Upload")
 
 
 @admin.route('/search', methods=['GET', 'POST'])
@@ -607,7 +607,7 @@ def search():
     if anchor_all_pay_form.submit4.data and anchor_all_pay_form.validate_on_submit():
         return redirect((url_for('admin.search_by_anchor', query=anchor_all_pay_form.anchor.data.strip())))
 
-    return render_template('admin/search/search.html', anchor_form=anchor_form, 
+    return render_template('admin/search/search.html', anchor_form=anchor_form, title="Search", 
                             anchor_payroll_form=anchor_payroll_form,
                             monthly_payroll_form=monthly_payroll_form,
                             anchor_all_pay_form=anchor_all_pay_form)
@@ -739,7 +739,7 @@ def add_comment():
 
     if form.validate_on_submit():
         comment = Comment(
-            anchor_momo=form.momo_number.data,
+            anchor_momo=form.momo_number.data.strip(),
             date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
             comment=form.comment.data
         )
@@ -752,7 +752,7 @@ def add_comment():
             add_log(current_user.username, 
                     "Add", target_id = comment.id, target_table="comments")
         except:
-            flash(u'错误:此陌陌号不存在, 请验证输入的陌陌号重试')
+            flash(u'错误:此陌陌号不存在, 请验证输入的陌陌号重试', 'error')
 
             db.session.rollback()
             add_log(current_user.username, 

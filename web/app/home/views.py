@@ -55,7 +55,7 @@ def add_anchor():
         anchor = Anchor(
             name=form.name.data,
             entry_time=datetime.datetime.now().strftime("%Y-%m-%d"),
-            momo_number=form.momo_number.data,
+            momo_number=form.momo_number.data.strip(),
             address=form.address.data,
             mobile_number=form.mobile_number.data,
             id_number=form.id_number.data,
@@ -82,10 +82,10 @@ def add_anchor():
             add_log(current_user.username, 
                     "Add", target_id = anchor.id, target_table="anchors")
         except:
-            flash('错误:主播陌陌号已在数据库中。')
+            flash('错误:主播陌陌号已在数据库中。', 'error')
             db.session.rollback()
             add_log(current_user.username, 
-                    "Add", target_table="anchors", status="F")
+                    "Add", target_id = form.momo_number.data, target_table="anchors", status="F")
 
         return redirect(url_for('home.dashboard'))
 
@@ -103,7 +103,7 @@ def add_penalty():
 
     if form.validate_on_submit():
         penalty = Penalty(
-            anchor_momo=form.momo_number.data,
+            anchor_momo=form.momo_number.data.strip(),
             date=datetime.date.today().strftime("%Y-%m-%d"),
             amount=form.amount.data
         )
