@@ -495,7 +495,7 @@ def upload():
         filename = filename.replace('-', '')
 
         upload_folder = os.getenv('UPLOAD_FOLDER')
-        path_name = os.path.join(upload_folder, filename)
+        path_name = os.path.join(upload_folder, 'table_store', filename)
         if not os.path.exists(path_name):
             f.save(path_name)
             df = pd.read_excel(path_name, encoding = "utf-8")
@@ -518,11 +518,11 @@ def upload():
 
             if date_object in dates_list:
                 msg = str(date_object.year) + '年' + str(date_object.month) + "月的工资表已在数据库, 请检查日期重新上传."
-                os.remove(path_name)
+                #os.remove(path_name)
                 flash(msg, 'error')
             elif invalid_number:
                 nums = ",	".join(invalid_number)
-                os.remove(path_name)
+                #os.remove(path_name)
                 msg = nums + " 不存在主播数据库中, 请检查陌陌号是否正确或添加新的主播。"
                 flash(msg, 'error')
             else:
@@ -567,7 +567,7 @@ def upload():
                     flash(error, 'error')
 
                 finally:
-                    os.remove(path_name)
+                    #os.remove(path_name)
                     connection.close()
         else:
             flash("该文件已存在。", 'error')

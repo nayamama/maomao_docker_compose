@@ -5,9 +5,9 @@ RUN python -m pip install --upgrade pip
 RUN apt-get install libpq-dev \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir /flask_app \
-    && mkdir /upload_folder
+    && mkdir -p /upload_folder/table_store
+#    && mkdir /upload_folder/table_store
 
-#ENV FLASK_CONFIG=development
 WORKDIR /flask_app
 
 COPY requirements.txt requirements.txt
