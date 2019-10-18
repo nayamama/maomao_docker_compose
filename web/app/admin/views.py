@@ -492,7 +492,7 @@ def upload():
     if form.validate_on_submit():
         f = form.upload_file.data
         filename = f.filename
-        filename = filename.replace('-', '')
+        filename = datetime.datetime.today().strftime('%Y%m%d_%H%M%S') + filename.replace('-', '')
 
         upload_folder = os.getenv('UPLOAD_FOLDER')
         path_name = os.path.join(upload_folder, 'table_store', filename)
