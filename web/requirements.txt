@@ -56,7 +56,7 @@ six==1.12.0
 SQLAlchemy==1.3.5
 SQLAlchemy-Utils==0.34.1
 tornado==5.1.1
-urllib3==1.25.3
+urllib3==1.25.8
 uWSGI==2.0.18
 visitor==0.1.3
 Werkzeug==0.15.4
